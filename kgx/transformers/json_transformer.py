@@ -63,7 +63,7 @@ class JsonTransformer(PandasTransformer):
             with open(filename, 'r') as FH:
                 obj = json.load(FH)
                 self.load(obj)
-
+        
     def load(self, obj: Dict[str, Any]) -> None:
         """
         Load a JSON object, containing nodes and edges, into a networkx.MultiDiGraph

@@ -8,7 +8,7 @@ import networkx
 import yaml
 
 import kgx
-from kgx import PandasTransformer, NeoTransformer, Validator, RdfTransformer
+from kgx import PandasTransformer, NeoTransformer, RedisgraphTransformer, Validator, RdfTransformer
 from kgx.config import get_logger
 from kgx.operations.graph_merge import merge_all_graphs
 from kgx.operations.summarize_graph import summarize_graph
@@ -180,7 +180,6 @@ def neo4j_download(uri: str, username: str, password: str, output: str, output_f
     output_transformer.save(output, output_format=output_format)
     return output_transformer
 
-
 def neo4j_upload(inputs: List[str], input_format: str, input_compression: Optional[str], uri: str, username: str, password: str, node_filters: Optional[Tuple] = None, edge_filters: Optional[Tuple] = None) -> kgx.Transformer:
     """
     Upload a set of nodes/edges to a Neo4j database.
@@ -224,6 +223,90 @@ def neo4j_upload(inputs: List[str], input_format: str, input_compression: Option
     neo_transformer.save()
     return neo_transformer
 
+def redisgraph_download(uri: str, username: str, password: str, output: str, output_format: Optional[str], output_compression: Optional[str], node_filters: Optional[Tuple] = None, edge_filters: Optional[Tuple] = None) -> kgx.Transformer:
+    """
+    Download nodes and edges from Redisgraph database.
+
+    Parameters
+    ----------
+    uri: str
+        Redisgraph URI. For example, https://localhost:7474
+    username: str
+        Username for authentication
+    password: str
+        Password for authentication
+    output: str
+        Where to write the output (stdout, by default)
+    output_format: Optional[str]
+        The output type (``csv``, by default)
+    output_compression: Optional[str]
+        The output compression type
+    node_filters: Optional[Tuple]
+        Node filters
+    edge_filters: Optional[Tuple]
+        Edge filters
+
+    Returns
+    -------
+    kgx.Transformer
+        The RedisgraphTransformer
+
+    """
+    transformer = RedisgraphTransformer(uri=uri, username=username, password=password)
+    if node_filters:
+        for n in node_filters:
+            transformer.set_node_filter(n[0], n[1])
+    if edge_filters:
+        for e in edge_filters:
+            transformer.set_edge_filter(e[0], e[1])
+    transformer.load()
+
+    output_transformer = get_transformer(output_format)(transformer.graph)
+    output_transformer.save(output, output_format=output_format)
+    return output_transformer
+
+def redisgraph_upload(inputs: List[str], input_format: str, input_compression: Optional[str], uri: str, username: str, password: str, node_filters: Optional[Tuple] = None, edge_filters: Optional[Tuple] = None) -> kgx.Transformer:
+    """
+    Upload a set of nodes/edges to a Redisgraph database.
+
+    Parameters
+    ----------
+    inputs: List[str]
+        A list of files that contains nodes/edges
+    input_format: str
+        The input format
+    input_compression: Optional[str]
+        The input compression type
+    uri: str
+        The full HTTP address for Redisgraph database
+    username: str
+        Username for authentication
+    password: str
+        Password for authentication
+    node_filters: Optional[Tuple]
+        Node filters
+    edge_filters: Optional[Tuple]
+        Edge filters
+
+    Returns
+    -------
+    kgx.Transformer
+        The RedisgraphTransformer
+
+    """
+    transformer = get_transformer(input_format)()
+    for file in inputs:
+        transformer.parse(file, input_format=input_format, compression=input_compression)
+    if node_filters:
+        for n in node_filters:
+            transformer.set_node_filter(n[0], n[1])
+    if edge_filters:
+        for e in edge_filters:
+            transformer.set_edge_filter(e[0], e[1])
+
+    neo_transformer = RedisgraphTransformer(transformer.graph, uri=uri, username=username, password=password)
+    neo_transformer.save()
+    return neo_transformer
 
 def transform(inputs: Optional[List[str]] = None, input_format: Optional[str] = None, input_compression: Optional[str] = None, output: Optional[str] = None, output_format: Optional[str] = None, output_compression: Optional[str] = None, node_filters: Optional[Tuple] = None, edge_filters: Optional[Tuple] = None, transform_config: str = None, source: Optional[List] = None, destination: Optional[List] = None, processes: int = 1) -> kgx.Transformer:
     """

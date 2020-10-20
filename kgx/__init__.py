@@ -6,6 +6,7 @@ from kgx.transformers.json_transformer import JsonTransformer, ObographJsonTrans
 from kgx.transformers.jsonl_transformer import JsonlTransformer
 from kgx.transformers.rsa_transformer import RsaTransformer
 from kgx.transformers.neo_transformer import NeoTransformer
+from kgx.transformers.redisgraph_transformer import RedisgraphTransformer
 from kgx.transformers.transformer import Transformer
 from kgx.validator import Validator
 from kgx.prefix_manager import PrefixManager

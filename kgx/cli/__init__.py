@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from kgx.config import get_logger, get_config
 from kgx.cli.cli_utils import get_file_types, get_transformer, parse_source, apply_operations, graph_summary, validate, \
-    neo4j_download, neo4j_upload, transform, merge
+    neo4j_download, neo4j_upload, transform, merge, redisgraph_download, redisgraph_upload
 
 log = get_logger()
 config = get_config()
@@ -148,6 +148,79 @@ def neo4j_upload_wrapper(inputs: List[str], input_format: str, input_compression
 
     """
     neo4j_upload(inputs, input_format, input_compression, uri, username, password, node_filters, edge_filters)
+
+@cli.command(name='redisgraph-download')
+@click.option('--uri', required=True, type=str, help='Redisgraph URI to download from. For example, https://localhost:7474')
+@click.option('--username', required=True, type=str, help='Redisgraph username')
+@click.option('--password', required=True, type=str, help='Redisgraph password')
+@click.option('--output', required=True, type=click.Path(exists=False), help='Output')
+@click.option('--output-format', required=True, help=f'The output format. Can be one of {get_file_types()}')
+@click.option('--output-compression', required=False, help='The output compression type')
+@click.option('--node-filters', required=False, type=click.Tuple([str, str]), multiple=True, help=f'Filters for filtering nodes from the input graph')
+@click.option('--edge-filters', required=False, type=click.Tuple([str, str]), multiple=True, help=f'Filters for filtering edges from the input graph')
+def redisgraph_download_wrapper(uri: str, username: str, password: str, output: str, output_format: str, output_compression: str, node_filters: Tuple, edge_filters: Tuple):
+    """
+    Download nodes and edges from Redisgraph database.
+    \f
+
+    Parameters
+    ----------
+    uri: str
+        Redisgraph URI. For example, https://localhost:7474
+    username: str
+        Username for authentication
+    password: str
+        Password for authentication
+    output: str
+        Where to write the output (stdout, by default)
+    output_format: str
+        The output type (``csv``, by default)
+    output_compression: str
+        The output compression type
+    node_filters: Tuple[str, str]
+        Node filters
+    edge_filters: Tuple[str, str]
+        Edge filters
+
+    """
+    redisgraph_download(uri, username, password, output, output_format, output_compression, node_filters, edge_filters)
+
+
+@cli.command(name='redisgraph-upload')
+@click.argument('inputs',  required=True, type=click.Path(exists=True), nargs=-1)
+@click.option('--input-format', required=True, help=f'The input format. Can be one of {get_file_types()}')
+@click.option('--input-compression', required=False, help='The input compression type')
+@click.option('--uri', required=True, type=str, help='Redisgraph URI to upload to. For example, https://localhost:7474')
+@click.option('--username', required=True, type=str, help='Redisgraph username')
+@click.option('--password', required=True, type=str, help='Redisgraph password')
+@click.option('--node-filters', required=False, type=click.Tuple([str, str]), multiple=True, help=f'Filters for filtering nodes from the input graph')
+@click.option('--edge-filters', required=False, type=click.Tuple([str, str]), multiple=True, help=f'Filters for filtering edges from the input graph')
+def redisgraph_upload_wrapper(inputs: List[str], input_format: str, input_compression: str, uri: str, username: str, password: str, node_filters: Tuple[str, str], edge_filters: Tuple[str, str]):
+    """
+    Upload a set of nodes/edges to a Redisgraph database.
+    \f
+
+    Parameters
+    ----------
+    inputs: List[str]
+        A list of files that contains nodes/edges
+    input_format: str
+        The input format
+    input_compression: str
+        The input compression type
+    uri: str
+        The full HTTP address for Redisgraph database
+    username: str
+        Username for authentication
+    password: str
+        Password for authentication
+    node_filters: Tuple[str, str]
+        Node filters
+    edge_filters: Tuple[str, str]
+        Edge filters
+
+    """
+    redisgraph_upload(inputs, input_format, input_compression, uri, username, password, node_filters, edge_filters)
 
 
 @cli.command('transform')
